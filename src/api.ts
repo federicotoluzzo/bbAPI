@@ -10,11 +10,6 @@ app.get('/', (req, res) => {
   res.send('Hello World!')
 })
 
-// example request body: {"serverIP":"0b0t.org"}
-app.post('/connect', (req, res) => {
-  res.send(`You asked to connect to ${req.body.serverIP}`)
-})
-
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
@@ -24,5 +19,16 @@ app.get('/getActivePlayerCount', (req, res) => {
 })
 
 app.get('/getServers', (req, res) => {
-  res.send(`{"activeServers":"${bots.getActiveServers()}"}`)
+  res.send({activeServers:bots.getActiveServers()})
+})
+
+// example request body: {"serverIP":"0b0t.org"}
+app.post('/connect', (req, res) => {
+  bots.addServer(req.body.serverIP)
+  res.send(``)
+})
+
+app.post('/disconnect', (req, res) => {
+  bots.removeServer(req.body.serverIP)
+  res.send(``)
 })
