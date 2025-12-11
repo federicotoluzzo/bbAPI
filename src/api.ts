@@ -20,7 +20,7 @@ app.listen(port, () => {
 })
 
 app.get('/getActivePlayerCount', (req, res) => {
-  res.send(`{"activePlayerCount":"${bots.getActivePlayerCount()}"}`)
+  res.send(`{"activePlayerCount":${bots.getActivePlayerCount()}}`)
 })
 
 app.get('/getServers', (req, res) => {

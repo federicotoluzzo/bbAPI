@@ -1,7 +1,7 @@
 const mineflayer = require('mineflayer');
 const fs = require('fs');
 
-let servers = new Set<string>(["0b0t.org", "2b2t.org", "3b3t.co", "5b5t.org", "6b6t.org", "7b7t.net", "8b8t.me", "9b9t.org", "constantiam.net", "eliteanarchy.org"]);
+let servers = new Set<string>(["0b0t.org", "2b2t.org", "3b3t.co", "5b5t.org", /*"6b6t.org",*/ "7b7t.net", "8b8t.me", "9b9t.org", "constantiam.net", "eliteanarchy.org"]);
 const PREFIX = "bb ";
 const HELP_MESSAGE = "> I ain't add any yet >:[ be patient";
 
@@ -10,6 +10,9 @@ let activeServers = new Set<string>();
 let activePlayers = new Map<string, number>();
 
 let uniqueUsernames = new Set<string>();
+
+let serverJoinQueue = Array.from(servers.values());
+
 
 function connect(serverIP:string){
     const bot = mineflayer.createBot({
@@ -23,6 +26,7 @@ function connect(serverIP:string){
         console.log(`Connected to ${serverIP}`)
         activeServers.add(serverIP);
         console.log(`Currently active in the following servers : ${Array.from(activeServers).join(", ")}`)
+        console.log(`Waiting to join : ${serverJoinQueue.join(", ")}`)
 
         bot.setControlState('forward', true)
         bot.setControlState('jump', true)
@@ -59,46 +63,25 @@ function connect(serverIP:string){
         
     }, 1000);
 
-    //bot.on('error', ()=>{console.log("ERROR")})
+    bot.on('error', ()=>{console.log("ERROR")})
     bot.on('end', () => {
         console.log('Bot has disconnected from ' + serverIP); 
         activeServers.delete(serverIP); 
         tablistInterval.close();
         activePlayers.set(serverIP, 0)
         console.log(`Currently active in the following servers : ${Array.from(activeServers).join(", ")}`)
-        connect(serverIP);
+        setTimeout(()=>{serverJoinQueue.push(serverIP);}, 60_000)
     });
-    /*
-    process.stdin.on("data", (data) => {
-        const message = data.toString().trim()
-        if (message.length > 0) {
-            bot.chat(message)
-        }
-    })
-    */
 }
-
-let serverJoinQueue = Array.from(servers.values());
-
 setInterval(()=>{
     if(serverJoinQueue.length > 0) {
         let serverIP = serverJoinQueue.pop()!;
         connect(serverIP);
         activePlayers.set(serverIP, 0);
     }
-}, 10000)
-
-setInterval(() => {
-    const totalPlayers = Array.from(activePlayers.values()).reduce((sum, players) => sum + players, 0);
-
-    console.log(`Currently overseeing ${totalPlayers} players.`);
-}, 6000);
+}, 10_000)
 
 process.on('SIGINT', async () => {
-    console.log('\b\bShutting down gracefully...');
-
-    console.log(Array.from(uniqueUsernames).join("\n"));
-
     await fs.writeFile('uniques.txt', Array.from(uniqueUsernames).sort().join("\n"), (err: NodeJS.ErrnoException | null) => {
         if (err) throw err;
         console.log('File saved!');
@@ -106,6 +89,8 @@ process.on('SIGINT', async () => {
     
     setTimeout(()=>{process.exit(0)}, 500);
 });
+
+// getters / setters
 
 export function getAllServers() : Set<string> {
     return servers;
