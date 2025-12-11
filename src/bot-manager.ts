@@ -1,5 +1,6 @@
+import { writeFile } from 'fs/promises';
 const mineflayer = require('mineflayer');
-const fs = require('fs');
+const fs = require('fs/promises');
 
 // stores the servers that are automatically joined on startup
 // TODO: fetch this from a database to be able to save this information across reloads
@@ -17,6 +18,15 @@ let uniqueUsernames = new Set<string>();
 
 // queue used by auto reconnect, helps avoid getting rate limited
 let serverJoinQueue = Array.from(servers.values());
+
+interface Message {
+    sender: string,
+    content: string,
+    server: string,
+    timestamp: string
+}
+
+let messages = new Set<Message>();
 
 // connection to a given server, contains all the code that determines what the bot does, takes a server IP as parameter
 function connect(serverIP:string){
@@ -46,6 +56,7 @@ function connect(serverIP:string){
 
     // ran every time the bot gets a message
     bot.on('chat', (username:string, message:string) => {
+        messages.add({sender:username, content:message, server:serverIP, timestamp:new Date().toISOString()})
         if (username != bot.username && message.startsWith(PREFIX)){
             switch(message.split(" ")[1]){
                 default:
@@ -88,12 +99,16 @@ setInterval(()=>{
 // saves the unique usernames to a text file
 // TODO: replace this with database queries
 process.on('SIGINT', async () => {
-    await fs.writeFile('uniques.txt', Array.from(uniqueUsernames).sort().join("\n"), (err: NodeJS.ErrnoException | null) => {
-        if (err) throw err;
-        console.log('File saved!');
-    });
-    
-    setTimeout(()=>{process.exit(0)}, 500);
+    try {
+        await writeFile('uniques.json', JSON.stringify(Array.from(uniqueUsernames)));
+        await writeFile('messages.json', JSON.stringify(Array.from(messages)));
+        
+        console.log("Files saved. Exiting.");
+        process.exit(0);
+    } catch (err) {
+        console.error("Error saving files:", err);
+        process.exit(1);
+    }
 });
 
 // getters / setters
