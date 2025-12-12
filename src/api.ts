@@ -26,6 +26,10 @@ app.get('/getActivePlayers', (req, res) => {
   res.send(`{"activePlayers":${JSON.stringify(Object.fromEntries(bots.getActivePlayers()))}}`)
 })
 
+app.get('/getUniquePlayers', (req, res) => {
+  res.send(JSON.stringify({uniquePlayerCount:bots.getUniqueUsernames().size, uniquePlayers:Array.from(bots.getUniqueUsernames())}))
+})
+
 // example request body: {"serverIP":"0b0t.org"}
 app.post('/connect', (req, res) => {
   bots.addServer(req.body.serverIP)

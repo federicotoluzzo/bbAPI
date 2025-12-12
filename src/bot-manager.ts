@@ -133,6 +133,10 @@ export function getActivePlayers() : Map<string, string[]> {
     return ret;
 }
 
+export function getUniqueUsernames() : Set<string> {
+    return uniqueUsernames;
+}
+
 export function addServer(serverIP : string) {
     servers.add(serverIP);
 }
