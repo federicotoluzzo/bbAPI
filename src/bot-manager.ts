@@ -4,14 +4,14 @@ const fs = require('fs/promises');
 
 // stores the servers that are automatically joined on startup
 // TODO: fetch this from a database to be able to save this information across reloads
-let servers = new Set<string>(["0b0t.org", "2b2t.org", "3b3t.co", "5b5t.org", /*"6b6t.org",*/ "7b7t.net", "8b8t.me", "9b9t.org", "constantiam.net", "eliteanarchy.org"]);
+let servers = new Set<string>(["0b0t.org"/*, "2b2t.org"*/, "3b3t.co", "5b5t.org", /*"6b6t.org",*/ "7b7t.net", "8b8t.me", "9b9t.org", "constantiam.net", "eliteanarchy.org"]);
 const PREFIX = "bb ";
 
 // servers that the bot is currently in
 let activeServers = new Set<string>();
 
 // number of active players in each server the 
-let activePlayers = new Map<string, number>();
+let activePlayers = new Map<string, Set<string>>();
 
 // unique player usernames found during the session
 let uniqueUsernames = new Set<string>();
@@ -68,7 +68,7 @@ function connect(serverIP:string){
     // periodically checks for new players
     let tablistInterval = setInterval(()=>{
         try{
-            activePlayers.set(serverIP, new Map(Object.entries(bot.players)).size);
+            activePlayers.set(serverIP, new Set(new Map(Object.entries(bot.players)).keys()));
             for (const username of Array.from(new Map(Object.entries(bot.players)).keys())){
                 if (!uniqueUsernames.has(username)) uniqueUsernames.add(username);
             }
@@ -82,7 +82,7 @@ function connect(serverIP:string){
         console.log('Bot has disconnected from ' + serverIP); 
         activeServers.delete(serverIP); 
         tablistInterval.close();
-        activePlayers.set(serverIP, 0)
+        activePlayers.set(serverIP, new Set<string>())
         console.log(`Currently active in the following servers : ${Array.from(activeServers).join(", ")}`)
         setTimeout(()=>{serverJoinQueue.push(serverIP);}, 60_000) // attempts to reconnect after a minute to avoid getting rate limited
     });
@@ -92,7 +92,7 @@ setInterval(()=>{
     if(serverJoinQueue.length > 0) {
         let serverIP = serverJoinQueue.pop()!;
         connect(serverIP);
-        activePlayers.set(serverIP, 0);
+        activePlayers.set(serverIP, new Set<string>());
     }
 }, 10_000)
 
@@ -122,7 +122,15 @@ export function getActiveServers() : Set<string> {
 }
 
 export function getActivePlayerCount() : number {
-    return Array.from(activePlayers.values()).reduce((sum, players) => sum + players, 0);
+    return Array.from(activePlayers.values()).reduce((sum, players) => sum + players.size, 0);
+}
+
+export function getActivePlayers() : Map<string, string[]> {
+    let ret = new Map<string, string[]>();
+    for (let serverIP of Array.from(activePlayers.keys())){
+        ret.set(serverIP, Array.from(activePlayers.get(serverIP)!.keys()));
+    }
+    return ret;
 }
 
 export function addServer(serverIP : string) {

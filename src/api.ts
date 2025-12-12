@@ -19,7 +19,11 @@ app.get('/getActivePlayerCount', (req, res) => {
 })
 
 app.get('/getServers', (req, res) => {
-  res.send({activeServers:bots.getActiveServers()})
+  res.send({activeServers:Array.from(bots.getActiveServers().keys())})
+})
+
+app.get('/getActivePlayers', (req, res) => {
+  res.send(`{"activePlayers":${JSON.stringify(Object.fromEntries(bots.getActivePlayers()))}}`)
 })
 
 // example request body: {"serverIP":"0b0t.org"}
