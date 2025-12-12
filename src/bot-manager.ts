@@ -100,8 +100,8 @@ setInterval(()=>{
 // TODO: replace this with database queries
 process.on('SIGINT', async () => {
     try {
-        await writeFile('uniques.json', JSON.stringify(Array.from(uniqueUsernames)));
-        await writeFile('messages.json', JSON.stringify(Array.from(messages)));
+        await writeFile('data/uniques.json', JSON.stringify(Array.from(uniqueUsernames)));
+        await writeFile('data/messages.json', JSON.stringify(Array.from(messages)));
         
         console.log("Files saved. Exiting.");
         process.exit(0);
