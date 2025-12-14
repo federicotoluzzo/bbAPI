@@ -1,4 +1,4 @@
-import { writeFile } from 'fs/promises';
+import { writeFile, appendFile } from 'fs/promises';
 const mineflayer = require('mineflayer');
 const fs = require('fs/promises');
 
@@ -96,12 +96,21 @@ setInterval(()=>{
     }
 }, 10_000)
 
+appendFile('data/messages.json', "[");
+
+
+setInterval(async ()=>{
+    await appendFile('data/messages.json', JSON.stringify(Array.from(messages)).substring(1, JSON.stringify(Array.from(messages)).length - 1) + ",");
+    messages.clear();
+}, 60_000);
+
 // saves the unique usernames to a text file
 // TODO: replace this with database queries
 process.on('SIGINT', async () => {
     try {
         await writeFile('data/uniques.json', JSON.stringify(Array.from(uniqueUsernames)));
-        await writeFile('data/messages.json', JSON.stringify(Array.from(messages)));
+        await appendFile('data/messages.json', JSON.stringify(Array.from(messages)).substring(1, JSON.stringify(Array.from(messages)).length - 1) + "]");
+
         
         console.log("Files saved. Exiting.");
         process.exit(0);
